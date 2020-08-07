@@ -1,26 +1,30 @@
 #!/usr/bin/perl
 
+
+use Getopt::Std;
+
 ### 参数解释:
-sub paramDesc {
+sub help {
     my $desc = <<"EOF" ;
-todo [-aAD] [args...]
+todo [-haAD] [args...] 打印最近3条todo项
+-h          获得帮助
 -a          打印所有的todo
 -A arg      新增一条内通为arg的todo
--D [arg]    不传arg时,删除最后一条;传递arg时删除第arg条
+-D [n]      不传n时,删除最后一条,否则删除第n条todo
 EOF
-    print "$desc" ;
+    return "$desc" ;
 }
 
 ### 创建目录
 # 参数1: 目录名
-sub createDir {
+sub create_dir {
     my $dirname = $_[0] ;
     mkdir($dirname);
 }
 
 ### 创建文件
 # 参数1: 文件名
-sub createFile {
+sub create_file {
     my $filename = $_[0] ;
     open(DATA, ">>$filename");
     close(DATA);
@@ -35,7 +39,7 @@ sub trim {
 }
 
 ### 获得当前用户的home目录
-sub getHomePath {
+sub get_home_path {
     my $home = `echo \$HOME`;
     return trim($home);
 }
@@ -44,14 +48,14 @@ sub getHomePath {
 # 参数1: 文件名
 # 参数2: n
 ## 返回: 读取的内容
-sub readTail {
+sub read_tail {
     my $filename = $_[0] ;
     open(DATA, "<$filename") ;
     my @lines = <DATA> ;
     my $size = @lines ;
     my $n = $size ;
-    $paramSize = @_ ;
-    if ($paramSize == 2) {
+    $param_size = @_ ;
+    if ($param_size == 2) {
         $n = $_[1] ;
     }
     $content = "";
@@ -67,7 +71,7 @@ sub readTail {
 ### 在文件里添加一条消息
 # 参数1: 文件名
 # 参数2: 加入的字符串
-sub addItem {
+sub add_item {
     my $filename = @_[0] ;
     my $item = @_[1] ;
     $item = trim($item) ;
@@ -83,14 +87,14 @@ sub addItem {
 # 参数2: n,如果不传则删除最后一条
 sub del {
     $filename = @_[0] ;
-    my $paramSize = @_ ;
-    my $n = $paramSize ;
-    if ($paramSize > 1) {
-        $n = @_[1] ;
-    }
-    my $content = readTail($filename) ;
+    my $param_size = @_ ;
+    my $content = read_tail($filename) ;
     my @items = split('\n', $content) ;
     my $size = @items ;
+    my $n = $size ;
+    if ($param_size > 1) {
+        $n = @_[1] ;
+    }
 
     open(DATA2, ">$filename") ;
     for ($i = 1 ; $i <= $size ; $i = $i + 1) {
@@ -103,48 +107,54 @@ sub del {
     close(DATA2) ;
 }
 
-### 初始化
+### 文件&全局变量初始化
 sub init {
-    # 检查是否存在~/.todo/todolist文件,如果不存在则创建
-    $TODODIR = getHomePath() ;
-    $FILENAME = ".todolist" ;
-    $TODOFILE = "${TODODIR}/${FILENAME}" ;
-    createDir($TODODIR) ;
-    createFile($TODOFILE) ;
+    my $file_name = "todolist" ; # todo列表文件名
+    my $home_path = get_home_path() ; # 用户家目录绝对路径
+    my $todo_work_dir = "${home_path}/.todo" ; # 工作目录绝对路径
+    $TODO_FILE = "${todo_work_dir}/${file_name}" ; # todo文件绝对路径
+
+    create_dir($todo_work_dir) ;
+    create_file($TODO_FILE) ;
 }
 
 sub main {
     init() ;
-    my $paramSize = @_ ;
-    if ($paramSize == 0) {
-        print readTail($TODOFILE, 3) ;
+
+    my %opts = () ;
+    $ret = getopts('haA:D:', \%opts) ;
+
+    ### 帮助
+    if ($opts{'h'}) {
+        print help() ;
         exit ;
     }
-    my $firstParam = @_[0] ;
 
-    if ($firstParam =~ /^-[a-zA-Z]{1}$/) {
-        $firstParam =~ s/-// ;
-        if ($firstParam eq "a") {
-            print readTail($TODOFILE) ;
-            exit ;
-        } elsif ($firstParam eq "A") {
-            if ($paramSize == 2) {
-                my $item = @_[1] ;
-                addItem($TODOFILE, $item) ;
-                exit ;
-            }
-        } elsif ($firstParam eq "D") {
-            if ($paramSize == 1) {
-                del($TODOFILE) ;
-                exit ;
-            } elsif ($paramSize == 2) {
-                my $n = @_[1] ;
-                del($TODOFILE, $n) ;
-                exit ;
-            }
-        }
+    ### 展示所有todo
+    if ($opts{'a'}) {
+        print read_tail($TODO_FILE) ;
+        exit ;
     }
-    paramDesc() ;
+
+    ### 新增一条todo
+    if ($opts{'A'}) {
+        add_item($TODO_FILE, $opts{'A'}) ;
+        exit ;
+    }
+
+    ### 删除一条todo
+    if (exists($opts{'D'})) {
+        $opts{'D'} ? del($TODO_FILE, $opts{'D'}) : del($TODO_FILE) ;
+        exit ;
+    }
+
+    ### 输入错误,放在最后是因为当传入参数D时如果后面不接参数也应该能正确响应,而此时$ret却是0,所以只有所有条件都不满足时才会打印
+    if (!$ret) {
+        print help () ;
+        exit ;
+    }
+
+    print read_tail($TODO_FILE, 3) ;
     exit ;
 }
 
