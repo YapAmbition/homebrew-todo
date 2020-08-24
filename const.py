@@ -6,14 +6,13 @@
 """
 
 # todo的帮助提示
-HINT = """todo [-hanAdD] [args...]
+HINT = """todo [-hanAD] [args...]
 todo        打印最近3条todo项
 -h          获得帮助
 -a          打印所有的todo
 -n arg      返回最后arg条todo
 -A arg      新增一条内通为arg的todo
--d          删除最后一条todo
--D          删除第n条todo"""
+-D [n]      删除第n条todo,不传参时默认删除最后一条"""
 
 # todo的列表文件名
 TODO_FILE_NAME = "todo_list"

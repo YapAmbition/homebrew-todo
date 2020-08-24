@@ -29,11 +29,22 @@ def get_home_path():
     return os.path.expanduser('~')
 
 
+#   判断传入对象是否是整形数字
+def is_int(s):
+    if s is None:
+        return False
+    try:
+        int(s)
+        return True
+    except ValueError:
+        return False
+
+
 #   读取文件的最后几行
 #   filename: 文件名
 #   row_count: 读取行数,当row_count<0时读取整个文件
 def read_tail(filename, row_count=-1):
-    if row_count is None or not str(row_count).isdigit():
+    if not is_int(row_count):
         raise TypeError("row_count should be a number")
     row_count = int(row_count)
     file = open(filename)
@@ -71,7 +82,7 @@ def add_item(filename, item):
 def del_item(filename, line=0):
     if filename is None:
         return
-    if not str(line).isdigit():
+    if not is_int(line):
         raise TypeError("line should be a number")
     line = int(line)
     file_r = open(filename, "r")
@@ -88,3 +99,46 @@ def del_item(filename, line=0):
     file_w.close()
     return item
 
+
+# 传入参数列表,参数获取范式
+# args: 传入的参数列表
+# opts: 接收参数的范式,不能以':'开头,不能包含'-'.
+# 输入abc表示-a, -b, -c,后面都不跟参数
+# 输入ab:c::表示-a不跟参数,-b后面跟一个参数,-c后跟2个参数
+# 参数不够会用None来代替
+# 返回{opt:[], ...}
+def get_opt(args: list, opts: str):
+    res = {}
+    if args is None or len(args) == 0:
+        return res
+    if '-' in opts or opts.startswith(':'):
+        raise ValueError("'-' is not a valid opt pattern and ':' can not at opts's begin")
+
+    pattern = {}
+    i = 0
+    while i < len(opts):
+        now = '-' + opts[i]
+        pattern[now] = 0
+        while i + 1 < len(opts) and opts[i + 1] == ':':
+            i = i + 1
+            pattern[now] = pattern[now] + 1
+        i = i + 1
+
+    i = 0
+    while i < len(args):
+        now_opt = args[i]
+        if now_opt is None or not str(now_opt).startswith('-'):
+            raise ValueError("opt must begin with '-'")
+        params = []
+        res[now_opt] = params
+        param_count = pattern.get(str(now_opt))
+        if param_count is None:
+            raise ValueError("this opt is not declared: %s" % now_opt)
+        for j in range(param_count):
+            if i + 1 < len(args) and args[i + 1] is not None and not str(args[i + 1]).startswith('-'):
+                i = i + 1
+                params.append(args[i])
+            else:
+                params.append(None)
+        i = i + 1
+    return res

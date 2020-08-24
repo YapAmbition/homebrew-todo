@@ -8,7 +8,7 @@
 import core
 import const
 import sys
-import getopt
+
 import font_color
 
 
@@ -19,10 +19,11 @@ def start(argv):
     core.create_dir(work_path)
     core.create_file(todo_file)
 
-    opts = []
+    opts = {}
     try:
-        opts, args = getopt.getopt(argv, "han:A:dD:")
-    except getopt.GetoptError:
+        opts = core.get_opt(argv, "han:A:D:")
+    except ValueError as e:
+        print(font_color.COLOR_RED.font_color(str(e)))
         print(const.HINT)
         exit(2)
 
@@ -30,27 +31,24 @@ def start(argv):
         print(core.read_tail(todo_file, const.TODO_COUNT))
         exit()
 
-    for opt, arg in opts:
+    for opt in opts.keys():
         if opt == '-h':
-            print(font_color.COLOR_RED.font_color(const.HINT))
+            print(const.HINT)
             exit()
         if opt == '-a':
             print(core.read_tail(todo_file))
             exit()
         if opt == '-n':
-            print(core.read_tail(todo_file, arg))
+            print(core.read_tail(todo_file, opts[opt][0]))
             exit()
         if opt == '-A':
-            if arg is None or len(arg) == 0:
-                print(const.HINT)
-            else:
-                core.add_item(todo_file, arg)
+            core.add_item(todo_file, opts[opt][0])
             exit()
         if opt == '-D':
-            core.del_item(todo_file, arg)
-            exit()
-        if opt == '-d':
-            core.del_item(todo_file)
+            if opts[opt][0] is None:
+                core.del_item(todo_file)
+            else:
+                core.del_item(todo_file, opts[opt][0])
             exit()
         print(font_color.COLOR_RED.font_color(const.HINT))
 
