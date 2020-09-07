@@ -17,6 +17,8 @@ todo -h                 帮助
 todo -a                 列出所有待办
 todo -A "something"     新增一条内容为something的待办
 todo -D [num]           删除一条序号为num的待办,如果不传参数时,删除最后一条
+-i [n]                  将第n条标记为重要,不传参数时展示所有重要todo
+-I [n]                  取消第n条的重要标记,不传参数时展示所有重要todo
 ```
 
 额外功能:
