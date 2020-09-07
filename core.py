@@ -31,12 +31,10 @@ def get_home_path():
 
 #   判断传入对象是否是整形数字
 def is_int(s):
-    if s is None:
-        return False
     try:
         int(s)
         return True
-    except ValueError:
+    except TypeError or ValueError:
         return False
 
 
@@ -47,7 +45,7 @@ def read_tail(filename, row_count=-1):
     if not is_int(row_count):
         raise TypeError("row_count should be a number")
     row_count = int(row_count)
-    file = open(filename)
+    file = open(filename, "r")
     if file is None:
         raise IOError("cant find this file: %s" % filename)
     lines = file.readlines()
@@ -57,9 +55,33 @@ def read_tail(filename, row_count=-1):
     content = ''
     for i in range(1, size + 1):
         if i > (size - row_count):
-            content = "%s%s. %s" % (content, i, lines[i-1])
+            content = "%s%s. %s" % (content, i, lines[i - 1])
     file.close()
     return content.strip('\n')
+
+
+def read(filename, nums):
+    """
+    读取第num行,num从1开始
+    :param filename: 文件名
+    :param nums: 行号列表(从1开始)
+    :return: 数据列表,含行号
+    """
+    if filename is None:
+        return []
+    if is_int(nums):
+        nums = [nums]
+    if not isinstance(nums, type([])):
+        raise ValueError("nums must be number or list")
+    file = open(filename, "r")
+    if file is None:
+        raise IOError("cant find this file: %s" % filename)
+    res = []
+    lines = file.readlines()
+    for i in range(len(nums)):
+        if nums[i] in range(1, len(lines) + 1):
+            res.append("%s. %s" % (nums[i], lines[nums[i] - 1]))
+    return res
 
 
 #   添加一条todo到文件末尾
