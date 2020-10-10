@@ -82,6 +82,42 @@ def del_item(indexes):
     file.close()
 
 
+def important(indexes):
+    """
+    重要,把下标在indexes的todo标记为重要
+    """
+    if indexes is None or len(indexes) == 0:
+        return
+    if type(indexes) is not list:
+        indexes = [int(indexes)]
+
+    todo_list = read_todo(None, None)
+    for i in range(1, len(todo_list) + 1):
+        if i in indexes:
+            todo_list[i - 1]['important'] = 1
+    file = open(const.TODO_FILE, "w")
+    file.write(json.dumps(todo_list))
+    file.close()
+
+
+def unimportant(indexes):
+    """
+    不重要,把下标在indexes的todo标记为不重要
+    """
+    if indexes is None or len(indexes) == 0:
+        return
+    if type(indexes) is not list:
+        indexes = [int(indexes)]
+
+    todo_list = read_todo(None, None)
+    for i in range(1, len(todo_list) + 1):
+        if i in indexes:
+            del todo_list[i - 1]['important']
+    file = open(const.TODO_FILE, "w")
+    file.write(json.dumps(todo_list))
+    file.close()
+
+
 def get_opt(args: list, opts: str):
     """
     传入参数列表,参数获取范式

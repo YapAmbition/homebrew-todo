@@ -10,8 +10,8 @@ import const
 import sys
 import font_color
 import os
-import pipeline
-import todo_handler
+from important_pipeline import ImportantPipeline
+from todo_pipeline import TodoPipeline
 
 
 def init_workspace():
@@ -26,9 +26,8 @@ def init_workspace():
 
 
 def register_opts(argv):
-    todo_pipeline = pipeline.Pipeline()
-    handler = todo_handler.TodoHandler()
-    todo_pipeline.add_handler(handler)
+    todo_pipeline = TodoPipeline()
+    important_pipeline = ImportantPipeline()
 
     opts = {}
     try:
@@ -64,6 +63,25 @@ def register_opts(argv):
         if opt == '-D':
             core.del_item(opts[opt][0])
             exit()
+        if opt == '-i':
+            if opts[opt][0] is None:
+                todo_list = core.read_todo()
+                msg = important_pipeline.handle(todo_list)
+                print(msg)
+                exit()
+            else:
+                core.important(opts[opt][0])
+                exit()
+        if opt == '-I':
+            if opts[opt][0] is None:
+                todo_list = core.read_todo()
+                msg = important_pipeline.handle(todo_list)
+                print(msg)
+                exit()
+            else:
+                core.unimportant(opts[opt][0])
+                exit()
+
         print(font_color.COLOR_RED.font_color(const.HINT))
 
 

@@ -5,6 +5,8 @@ from handler import Handler
 
 """
 将读取的todo列表友好展示
+输入: todo对象列表
+输出: 带序号的tod列表
 """
 
 
