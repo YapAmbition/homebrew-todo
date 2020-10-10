@@ -1,135 +1,98 @@
 #!/usr/bin/python
 # !-*- coding:utf-8 -*-
 
+import const
+import json
+
 """
 核心功能包
+todo内容:
+{
+"id": xx,
+"content": "xxx"
+}
 """
-import os
 
 
-#   创建目录
-#   如果目录不存在则创建目录
-def create_dir(dir_name):
-    exists = os.path.exists(dir_name)
-    if not exists:
-        os.mkdir(dir_name, 0o775)
-
-
-#   创建文件
-#   如果目录不存在则创建文件
-def create_file(filename):
-    exists = os.path.exists(filename)
-    if not exists:
-        file = open(filename, "w")
-        file.close()
-
-
-#   获取当前用户的家目录
-def get_home_path():
-    return os.path.expanduser('~')
-
-
-#   判断传入对象是否是整形数字
-def is_int(s):
-    try:
-        int(s)
-        return True
-    except TypeError or ValueError:
-        return False
-
-
-#   读取文件的最后几行
-#   filename: 文件名
-#   row_count: 读取行数,当row_count<0时读取整个文件
-def read_tail(filename, row_count=-1):
-    if not is_int(row_count):
-        raise TypeError("row_count should be a number")
-    row_count = int(row_count)
-    file = open(filename, "r")
-    if file is None:
-        raise IOError("cant find this file: %s" % filename)
-    lines = file.readlines()
-    size = len(lines)
-    if row_count < 0:
-        row_count = size
-    content = ''
-    for i in range(1, size + 1):
-        if i > (size - row_count):
-            content = "%s%s. %s" % (content, i, lines[i - 1])
-    file.close()
-    return content.strip('\n')
-
-
-def read(filename, nums):
+def read_todo(from_index=None, to_index=None):
     """
-    读取第num行,num从1开始
-    :param filename: 文件名
-    :param nums: 行号列表(从1开始)
-    :return: 数据列表,含行号
+    读取todo文件中下标在[from_index, to_index]之间的todo,如果todo总量不够则有多少返回多少
+    :param from_index: 起始下标, 传入None表示从第一个开始返回
+    :param to_index: 终止下标, 传入None表示返回到最后一个
+    :return: todo列表
     """
-    if filename is None:
+    if from_index is None:
+        from_index = 0
+    if to_index is not None and to_index < from_index:
         return []
-    if is_int(nums):
-        nums = [nums]
-    if not isinstance(nums, type([])):
-        raise ValueError("nums must be number or list")
-    file = open(filename, "r")
-    if file is None:
-        raise IOError("cant find this file: %s" % filename)
-    res = []
+
+    file = open(const.TODO_FILE, "r")
     lines = file.readlines()
-    for i in range(len(nums)):
-        if nums[i] in range(1, len(lines) + 1):
-            res.append("%s. %s" % (nums[i], lines[nums[i] - 1]))
-    return res
+    file.close()
+    content = ""
+    if lines is not None and len(lines) > 0:
+        content = "".join(lines)
+
+    todo_items = []
+    if lines != "" and len(lines) > 0:
+        todo_items = json.loads(content)
+
+    if to_index is None:
+        to_index = len(todo_items) - 1
+
+    return todo_items[from_index: to_index + 1]
 
 
-#   添加一条todo到文件末尾
-#   filename:  文件名
-#   item: 添加的todo
-def add_item(filename, item):
-    if filename is None or item is None or len(item) == 0: return
-    file = open(filename, "a")
-    if file is None:
-        raise IOError("cant find this file: %s" % filename)
-    item = item.strip()
-    item = item + "\n"
-    file.write(item)
+def add_todo(item):
+    """
+    添加一条todo到todo列表
+    :param item: todo内容
+    """
+    if item is None or len(item) == 0:
+        return
+    todo_list = read_todo(None, None)
+    last_id = 0 if len(todo_list) == 0 else todo_list[-1]['id']
+    todo_list.append({"id": last_id + 1, "content": item})
+    file = open(const.TODO_FILE, "w")
+    file.write(json.dumps(todo_list))
     file.close()
 
 
-#   删除一条todo
-#   filename: 文件名
-#   line: 行号,line <= 0时删除最后一条
-def del_item(filename, line=0):
-    if filename is None:
+def del_item(indexes):
+    """
+    删除todo
+    :param indexes: 待删除的下标
+    """
+    if indexes is None or len(indexes) == 0:
         return
-    if not is_int(line):
-        raise TypeError("line should be a number")
-    line = int(line)
-    file_r = open(filename, "r")
-    if file_r is None:
-        raise IOError("cant find this file: %s" % filename)
-    lines = file_r.readlines()
-    file_r.close()
-    line_index = -1 if line <= 0 else line - 1
-    if line_index >= len(lines):
-        return None
-    item = lines.pop(line_index)
-    file_w = open(filename, "w")
-    file_w.writelines(lines)
-    file_w.close()
-    return item
+    if type(indexes) is not list:
+        indexes = [int(indexes)]
+
+    todo_list = read_todo(None, None)
+    new_todo_list = []
+    no = 1
+    for i in range(1, len(todo_list) + 1):
+        if i not in indexes:
+            todo_list[i-1]['id'] = no
+            new_todo_list.append(todo_list[i-1])
+            no = no + 1
+
+    file = open(const.TODO_FILE, "w")
+    file.write(json.dumps(new_todo_list))
+    file.close()
 
 
-# 传入参数列表,参数获取范式
-# args: 传入的参数列表
-# opts: 接收参数的范式,不能以':'开头,不能包含'-'.
-# 输入abc表示-a, -b, -c,后面都不跟参数
-# 输入ab:c::表示-a不跟参数,-b后面跟一个参数,-c后跟2个参数
-# 参数不够会用None来代替
-# 返回{opt:[], ...}
 def get_opt(args: list, opts: str):
+    """
+    传入参数列表,参数获取范式
+    输入abc表示-a, -b, -c,后面都不跟参数
+    输入ab:c::表示-a不跟参数,-b后面跟一个参数,-c后跟2个参数
+    参数不够会用None来代替
+
+    :param args: 传入的参数列表
+    :param opts: 接收参数的范式,不能以':'开头,不能包含'-'
+    :return: {opt:[], ...}
+    """
     res = {}
     if args is None or len(args) == 0:
         return res

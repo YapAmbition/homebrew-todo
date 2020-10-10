@@ -9,18 +9,21 @@ import core
 import const
 import sys
 import font_color
-import style
+import os
 
 
-def start(argv):
-    home_path = core.get_home_path()
-    work_path = "%s/%s" % (home_path, const.TODO_DIR_NAME)
-    todo_file = "%s/%s" % (work_path, const.TODO_FILE_NAME)
-    core.create_dir(work_path)
-    core.create_file(todo_file)
+def init_workspace():
+    """
+    初始化todo工作空间和各个文件
+    """
+    if not os.path.exists(const.WORK_PATH):
+        os.mkdir(const.WORK_PATH, 0o775)
+    if not os.path.exists(const.TODO_FILE):
+        file = open(const.TODO_FILE, "w")
+        file.close()
 
-    todo_style = style.Style(todo_file, work_path)  # 样式文件
 
+def register_opts(argv):
     opts = {}
     try:
         opts = core.get_opt(argv, "han:A:D:I:i:")
@@ -30,7 +33,8 @@ def start(argv):
         exit(2)
 
     if opts is None or len(opts) == 0:
-        print(core.read_tail(todo_file, const.TODO_COUNT))
+        todo_list = core.read_todo()
+        print(todo_list[-3:])
         exit()
 
     for opt in opts.keys():
@@ -38,37 +42,29 @@ def start(argv):
             print(const.HINT)
             exit()
         if opt == '-a':
-            print(core.read_tail(todo_file))
+            todo_list = core.read_todo()
+            print(todo_list)
             exit()
         if opt == '-n':
-            print(core.read_tail(todo_file, opts[opt][0]))
+            todo_list = core.read_todo()
+            print(todo_list[-opts[opt][0]:])
             exit()
         if opt == '-A':
-            core.add_item(todo_file, opts[opt][0])
+            core.add_todo(opts[opt][0])
             exit()
         if opt == '-D':
-            if opts[opt][0] is None:
-                core.del_item(todo_file)
-            else:
-                core.del_item(todo_file, opts[opt][0])
-            exit()
-        if opt == '-i':
-            if opts[opt][0] is None:
-                content = font_color.COLOR_GREEN.font_color(todo_style.get_important())
-                if content is not None:
-                    print(content)
-            else:
-                todo_style.mark_important(int(opts[opt][0]) - 1)
-            exit()
-        if opt == '-I':
-            if opts[opt][0] is None:
-                content = font_color.COLOR_GREEN.font_color(todo_style.get_important())
-                if content is not None:
-                    print(content)
-            else:
-                todo_style.unmark_important(int(opts[opt][0]) - 1)
+            core.del_item(opts[opt][0])
             exit()
         print(font_color.COLOR_RED.font_color(const.HINT))
+
+
+def start(argv):
+    """
+    1. 初始化todo工作空间和各个文件
+    2. 注册功能
+    """
+    init_workspace()
+    register_opts(argv)
 
 
 if __name__ == "__main__":
