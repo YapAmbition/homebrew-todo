@@ -13,7 +13,7 @@ class Pipeline:
     def __init__(self):
         self.__handlers = []
 
-    def handle(self, msg, args):
+    def handle(self, msg, args=None):
         for handler in self.__handlers:
             msg = handler.handle(msg, args)
         return msg
