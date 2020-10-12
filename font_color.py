@@ -1,6 +1,10 @@
 #!/usr/bin/python
 # !-*- coding:utf-8 -*-
 
+"""
+可以通过font_color让字符串在终端中显示为有颜色的字
+"""
+
 
 class Color:
     def __init__(self, code: int):

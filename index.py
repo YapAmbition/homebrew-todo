@@ -8,51 +8,112 @@
 import core
 import const
 import sys
-import getopt
 import font_color
+import os
+from important_pipeline import ImportantPipeline
+from todo_pipeline import TodoPipeline
+from label_pipeline import LabelPipeline
 
 
-def start(argv):
-    home_path = core.get_home_path()
-    work_path = "%s/%s" % (home_path, const.TODO_DIR_NAME)
-    todo_file = "%s/%s" % (work_path, const.TODO_FILE_NAME)
-    core.create_dir(work_path)
-    core.create_file(todo_file)
+def init_workspace():
+    """
+    初始化todo工作空间和各个文件
+    """
+    if not os.path.exists(const.WORK_PATH):
+        os.mkdir(const.WORK_PATH, 0o775)
+    if not os.path.exists(const.TODO_FILE):
+        file = open(const.TODO_FILE, "w")
+        file.close()
 
-    opts = []
+
+def register_opts(argv):
+    todo_pipeline = TodoPipeline()
+    important_pipeline = ImportantPipeline()
+    label_pipeline = LabelPipeline()
+
+    opts = {}
     try:
-        opts, args = getopt.getopt(argv, "han:A:dD:")
-    except getopt.GetoptError:
-        print(const.HINT)
+        opts = core.get_opt(argv, "han:A:D:I:i:l::L::")
+    except ValueError as e:
+        print(font_color.COLOR_RED.font_color(str(e)))
+        print(font_color.COLOR_RED.font_color(const.HINT))
         exit(2)
 
     if opts is None or len(opts) == 0:
-        print(core.read_tail(todo_file, const.TODO_COUNT))
+        todo_list = core.read_todo()
+        msg = todo_pipeline.handle(todo_list[-3:])
+        print(msg)
         exit()
 
-    for opt, arg in opts:
+    for opt in opts.keys():
         if opt == '-h':
-            print(font_color.COLOR_RED.font_color(const.HINT))
+            print(const.HINT)
             exit()
         if opt == '-a':
-            print(core.read_tail(todo_file))
+            todo_list = core.read_todo()
+            msg = todo_pipeline.handle(todo_list)
+            print(msg)
             exit()
         if opt == '-n':
-            print(core.read_tail(todo_file, arg))
+            todo_list = core.read_todo()
+            msg = todo_pipeline.handle(todo_list[-opts[opt][0]:])
+            print(msg)
             exit()
         if opt == '-A':
-            if arg is None or len(arg) == 0:
-                print(const.HINT)
-            else:
-                core.add_item(todo_file, arg)
+            core.add_todo(opts[opt][0])
             exit()
         if opt == '-D':
-            core.del_item(todo_file, arg)
+            core.del_item(opts[opt][0])
             exit()
-        if opt == '-d':
-            core.del_item(todo_file)
-            exit()
+        if opt == '-i':
+            if opts[opt][0] is None:
+                todo_list = core.read_todo()
+                msg = important_pipeline.handle(todo_list)
+                print(msg)
+                exit()
+            else:
+                core.important(opts[opt][0])
+                exit()
+        if opt == '-I':
+            if opts[opt][0] is None:
+                todo_list = core.read_todo()
+                msg = important_pipeline.handle(todo_list)
+                print(msg)
+                exit()
+            else:
+                core.unimportant(opts[opt][0])
+                exit()
+        if opt == '-l':
+            if opts[opt][0] is not None:
+                if opts[opt][1] is not None:
+                    core.add_label(int(opts[opt][0]), str(opts[opt][1]))
+                    exit()
+                if opts[opt][1] is None:
+                    todo_list = core.read_todo()
+                    msg = label_pipeline.handle(todo_list, opts[opt][0])
+                    print(msg)
+                    exit()
+        if opt == '-L':
+            if opts[opt][0] is not None:
+                if opts[opt][1] is not None:
+                    core.del_label(int(opts[opt][0]), str(opts[opt][1]))
+                    exit()
+                if opts[opt][1] is None:
+                    todo_list = core.read_todo()
+                    msg = label_pipeline.handle(todo_list, str(opts[opt][0]))
+                    print(msg)
+                    exit()
+
         print(font_color.COLOR_RED.font_color(const.HINT))
+
+
+def start(argv):
+    """
+    1. 初始化todo工作空间和各个文件
+    2. 注册功能
+    """
+    init_workspace()
+    register_opts(argv)
 
 
 if __name__ == "__main__":
