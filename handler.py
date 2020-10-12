@@ -11,6 +11,6 @@ import abc
 class Handler(metaclass=abc.ABCMeta):
 
     @abc.abstractmethod
-    def handle(self, msg):
+    def handle(self, msg, args=None):
         pass
 

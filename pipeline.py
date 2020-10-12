@@ -13,9 +13,9 @@ class Pipeline:
     def __init__(self):
         self.__handlers = []
 
-    def handle(self, msg):
+    def handle(self, msg, args):
         for handler in self.__handlers:
-            msg = handler.handle(msg)
+            msg = handler.handle(msg, args)
         return msg
 
     def add_handler(self, handler: Handler):

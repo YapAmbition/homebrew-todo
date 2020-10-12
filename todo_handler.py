@@ -6,13 +6,13 @@ from handler import Handler
 """
 将读取的todo列表友好展示
 输入: todo对象列表
-输出: 带序号的tod列表
+输出: 带序号的todo列表字符串
 """
 
 
 class TodoHandler(Handler):
 
-    def handle(self, msg):
+    def handle(self, msg, args=None):
         """
         msg一定是一个列表,数据结构可以到core.py查看,大概为[{"id": xxx, "content": "xxx"}]这个样子
         """

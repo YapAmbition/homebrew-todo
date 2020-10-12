@@ -118,6 +118,60 @@ def unimportant(indexes):
     file.close()
 
 
+def add_label(index, label):
+    """
+    给第index条todo添加label标签
+    :param index: 序号,从1开始
+    :param label: 标签不得大于8字节
+    """
+    if index is None or label is None or len(label) == 0:
+        return
+
+    index = int(index)
+
+    if type(label) is not str:
+        raise TypeError("label must be a string")
+
+    if len(label) > const.LABEL_SIZE:
+        raise ValueError("label can not greater than %s" % const.LABEL_SIZE)
+
+    todo_list = read_todo(None, None)
+    for i in range(1, len(todo_list) + 1):
+        if i == index:
+            if todo_list[i - 1].get('label') is None:
+                todo_list[i - 1]['label'] = [label]
+            else:
+                todo_list[i - 1].append(label)
+    file = open(const.TODO_FILE, "w")
+    file.write(json.dumps(todo_list))
+    file.close()
+
+
+def del_label(index, label):
+    """
+    删除第index条todo的label标签
+    :param index: index: 序号,从1开始
+    :param label: 已存在的标签
+    """
+    if index is None or label is None or len(label) == 0 or type(label) is not str:
+        return
+
+    index = int(index)
+
+    todo_list = read_todo(None, None)
+    for i in range(1, len(todo_list) + 1):
+        if i == index:
+            if todo_list[i - 1].get('label') is None:
+                return
+            elif label in todo_list[i - 1]['label']:
+                todo_list[i - 1]['label'].remove(label)
+            else:
+                return
+    file = open(const.TODO_FILE, "w")
+    file.write(json.dumps(todo_list))
+    file.close()
+
+
 def get_opt(args: list, opts: str):
     """
     传入参数列表,参数获取范式

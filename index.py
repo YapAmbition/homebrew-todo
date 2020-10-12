@@ -12,6 +12,7 @@ import font_color
 import os
 from important_pipeline import ImportantPipeline
 from todo_pipeline import TodoPipeline
+from label_pipeline import LabelPipeline
 
 
 def init_workspace():
@@ -28,10 +29,11 @@ def init_workspace():
 def register_opts(argv):
     todo_pipeline = TodoPipeline()
     important_pipeline = ImportantPipeline()
+    label_pipeline = LabelPipeline()
 
     opts = {}
     try:
-        opts = core.get_opt(argv, "han:A:D:I:i:")
+        opts = core.get_opt(argv, "han:A:D:I:i:l::L::")
     except ValueError as e:
         print(font_color.COLOR_RED.font_color(str(e)))
         print(font_color.COLOR_RED.font_color(const.HINT))
@@ -81,6 +83,26 @@ def register_opts(argv):
             else:
                 core.unimportant(opts[opt][0])
                 exit()
+        if opt == '-l':
+            if opts[opt][0] is not None:
+                if opts[opt][1] is not None:
+                    core.add_label(int(opts[opt][0]), str(opts[opt][1]))
+                    exit()
+                if opts[opt][1] is None:
+                    todo_list = core.read_todo()
+                    msg = label_pipeline.handle(todo_list, opts[opt][0])
+                    print(msg)
+                    exit()
+        if opt == '-L':
+            if opts[opt][0] is not None:
+                if opts[opt][1] is not None:
+                    core.del_label(int(opts[opt][0]), str(opts[opt][1]))
+                    exit()
+                if opts[opt][1] is None:
+                    todo_list = core.read_todo()
+                    msg = label_pipeline.handle(todo_list, str(opts[opt][0]))
+                    print(msg)
+                    exit()
 
         print(font_color.COLOR_RED.font_color(const.HINT))
 

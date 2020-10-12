@@ -29,3 +29,5 @@ WORK_PATH = "%s/.todo" % HOME_PATH
 
 # todo文件的绝对路径
 TODO_FILE = "%s/todo_list" % WORK_PATH
+
+LABEL_SIZE = 8

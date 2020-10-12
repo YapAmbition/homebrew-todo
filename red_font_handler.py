@@ -13,5 +13,5 @@ import font_color
 
 class RedFontHandler(Handler):
 
-    def handle(self, msg):
+    def handle(self, msg, args=None):
         return font_color.COLOR_RED.font_color(msg)
