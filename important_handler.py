@@ -12,7 +12,7 @@ from handler import Handler
 
 class ImportantHandler(Handler):
 
-    def handle(self, msg, args):
+    def handle(self, msg, args=None):
         """
         msg一定是一个列表,数据结构可以到core.py查看,大概为[{"id": xxx, "content": "xxx", "important": 1}]这个样子
         """

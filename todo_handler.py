@@ -2,11 +2,12 @@
 # !-*- coding:utf-8 -*-
 
 from handler import Handler
+import red_font_handler
 
 """
 将读取的todo列表友好展示
 输入: todo对象列表
-输出: 带序号的todo列表字符串
+输出: 带序号的todo列表字符串,如果是important的todo,则用红色表示
 """
 
 
@@ -19,8 +20,12 @@ class TodoHandler(Handler):
         if msg is None or type(msg) is not list:
             return msg
 
+        rfh = red_font_handler.RedFontHandler()
         content = ""
         for todo in msg:
-            content = "%s%s. %s\n" % (content, todo['id'], todo['content'])
+            current = "%s. %s" % (todo['id'], todo['content'])
+            if todo.get('important') is not None and todo.get('important') > 0:
+                current = rfh.handle(current)
+            content = "%s%s\n" % (content, current)
 
         return content.strip()
