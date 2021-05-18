@@ -11,6 +11,7 @@ import sys
 import font_color
 import os
 from important_pipeline import ImportantPipeline
+from unimportant_pipeline import UnimportantPipeline
 from todo_pipeline import TodoPipeline
 from label_pipeline import LabelPipeline
 
@@ -29,6 +30,7 @@ def init_workspace():
 def register_opts(argv):
     todo_pipeline = TodoPipeline()
     important_pipeline = ImportantPipeline()
+    unimportant_pipeline = UnimportantPipeline()
     label_pipeline = LabelPipeline()
 
     opts = {}
@@ -55,10 +57,16 @@ def register_opts(argv):
             print(msg)
             exit()
         if opt == '-n':
-            todo_list = core.read_todo()
-            msg = todo_pipeline.handle(todo_list[-opts[opt][0]:])
-            print(msg)
-            exit()
+            if opts[opt][0] is not None:
+                todo_list = core.read_todo()
+                msg = todo_pipeline.handle(todo_list[-int(opts[opt][0]):])
+                print(msg)
+                exit()
+            else:
+                todo_list = core.read_todo()
+                msg = todo_pipeline.handle(todo_list[-3:])
+                print(msg)
+                exit()
         if opt == '-A':
             core.add_todo(opts[opt][0])
             exit()
@@ -77,7 +85,7 @@ def register_opts(argv):
         if opt == '-I':
             if opts[opt][0] is None:
                 todo_list = core.read_todo()
-                msg = important_pipeline.handle(todo_list)
+                msg = unimportant_pipeline.handle(todo_list)
                 print(msg)
                 exit()
             else:
